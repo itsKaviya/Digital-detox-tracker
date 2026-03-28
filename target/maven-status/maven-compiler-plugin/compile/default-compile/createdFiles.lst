@@ -1,0 +1,12 @@
+com\detox\FileManager.class
+com\detox\User.class
+com\detox\DetoxApplication.class
+com\detox\DetoxScoreCalculator.class
+com\detox\AlertSystem.class
+com\detox\Analyzer.class
+com\detox\ReportGenerator.class
+com\detox\DetoxController.class
+com\detox\Main.class
+com\detox\SuggestionEngine.class
+com\detox\Tracker.class
+com\detox\ScreenTimeRecord.class
