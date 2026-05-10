@@ -1,5 +1,6 @@
 package com.detox.gui;
 
+import com.detox.AppTracker;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 import com.detox.DatabaseManager;
 
@@ -26,6 +27,12 @@ public class MainApp {
         SwingUtilities.invokeLater(() -> {
             try {
                 DatabaseManager db = DatabaseManager.getInstance();
+                
+                // Start background app tracking
+                AppTracker tracker = AppTracker.getInstance();
+                tracker.start();
+                Runtime.getRuntime().addShutdownHook(new Thread(tracker::stop));
+                
                 MainFrame frame = new MainFrame(db);
                 frame.setVisible(true);
             } catch (Exception e) {

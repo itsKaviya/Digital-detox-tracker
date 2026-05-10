@@ -7,6 +7,9 @@ com\detox\gui\LoginPanel$3.class
 com\detox\DatabaseManager.class
 com\detox\gui\LoginPanel$4.class
 com\detox\gui\DashboardPanel$3.class
+com\detox\gui\DashboardPanel$8.class
+com\detox\AppTracker.class
+com\detox\gui\LogTimeDialog$3.class
 com\detox\gui\MainApp.class
 com\detox\gui\LoginPanel$1.class
 com\detox\ScreenTimeRecord.class
@@ -20,7 +23,7 @@ com\detox\gui\LogTimeDialog$1.class
 com\detox\SuggestionEngine.class
 com\detox\gui\LogTimeDialog.class
 com\detox\gui\LogTimeDialog$2.class
-com\detox\gui\LogTimeDialog$ChangeListener.class
+com\detox\AppTracker$Category.class
 com\detox\gui\LoginPanel$2.class
 com\detox\gui\LoginPanel$5.class
 com\detox\gui\DashboardPanel$4.class

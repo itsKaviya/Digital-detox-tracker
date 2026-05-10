@@ -100,6 +100,27 @@ public class DashboardPanel extends JPanel {
         welcome.setForeground(SUBTEXT);
         right.add(welcome);
 
+        // Tracking indicator
+        JPanel tracking = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        tracking.setOpaque(false);
+        JPanel dot = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(GOOD);
+                g2.fillOval(0, 7, 8, 8);
+                g2.dispose();
+            }
+            @Override public Dimension getPreferredSize() { return new Dimension(8, 22); }
+        };
+        dot.setOpaque(false);
+        JLabel trackLbl = new JLabel("Live Tracking");
+        trackLbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        trackLbl.setForeground(GOOD);
+        tracking.add(dot);
+        tracking.add(trackLbl);
+        right.add(tracking);
+
         JButton logoutBtn = flatButton("Logout", BAD);
         logoutBtn.addActionListener(e -> frame.showLogin());
         right.add(logoutBtn);
