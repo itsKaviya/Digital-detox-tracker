@@ -9,52 +9,56 @@ public class SuggestionEngine {
         int total     = record.getTotalTime();
         int safeLimit = user.getDailySafeLimit();
         int social    = record.getSocialTime();
-        int peakHour  = record.getPeakUsageHour();
+        String emotion = record.getEmotion() != null ? record.getEmotion().toLowerCase() : "neutral";
 
+        String baseAdvice;
+        String alternateActivity;
+
+        // Base pattern-based advice
         switch (pattern) {
             case "LATE_NIGHT_OVERUSE":
-                return "You're using screens late at night AND exceeding your limit. "
-                     + "Try the 20-20-20 rule and set a hard device curfew 1 hour before sleep. "
-                     + "Consider using blue-light filters and a wind-down alarm.";
-
+                baseAdvice = "Late-night overuse detected. Device curfew 1 hour before sleep is highly recommended.";
+                alternateActivity = "Read a physical book / Guided sleep meditation";
+                break;
             case "LATE_NIGHT_USAGE":
-                return "Screen use during sleep hours disrupts melatonin production. "
-                     + "Set a phone-free bedroom policy and try reading a physical book instead. "
-                     + "Your sleep quality will improve dramatically!";
-
+                baseAdvice = "Screen use during sleep hours disrupts rest. Bedroom should be a tech-free zone.";
+                alternateActivity = "Journaling / Herbal tea / Light stretching";
+                break;
             case "HIGH_SOCIAL_MEDIA":
-                return "Social media is consuming " + social + " min of your day (" 
-                     + percent(social, total) + "% of total). "
-                     + "Try replacing 30 min of scrolling with an outdoor walk, creative hobby, "
-                     + "or a quick call with a friend in person. Use app timers as guardrails.";
-
+                baseAdvice = "Social media is dominating your screen time. Mindful scrolling is key.";
+                alternateActivity = "Sketching / 15-min walk / Call a family member";
+                break;
             case "SEVERE_OVERUSE":
-                return "You've exceeded your safe limit by "
-                     + (total - safeLimit) + " minutes — that's "
-                     + percent(total - safeLimit, safeLimit) + "% over budget! "
-                     + "Schedule a 'digital detox hour' tomorrow afternoon. "
-                     + "Engage in physical exercise or mindfulness meditation to reset.";
-
+                baseAdvice = "Severe screen overuse today. Your brain needs a complete digital reset.";
+                alternateActivity = "Outdoor jogging / Cooking a new recipe / Deep cleaning";
+                break;
             case "EXCESS_TOTAL_USAGE":
-                return "You're " + (total - safeLimit) + " minutes over your safe limit today. "
-                     + "Tomorrow, try the Pomodoro Technique: 25 min on, 5 min off screens. "
-                     + "Break up screen time with short stretching or breathing exercises.";
-
+                baseAdvice = "You're over your safe limit. Try breaking up screen time with movement.";
+                alternateActivity = "Yoga / Power nap / Puzzles or Board games";
+                break;
             case "PRODUCTIVE_USAGE":
-                return "Great work — most of your screen time was spent learning! "
-                     + "Remember to protect your eyes: follow the 20-20-20 rule "
-                     + "(every 20 min, look 20 ft away for 20 sec). "
-                     + "Keep up the productive momentum!";
-
-            case "BALANCED_USAGE":
-                return "You're within your healthy screen time limit today. "
-                     + "Keep this up — consistency is the key to digital wellness. "
-                     + "Reward yourself with a tech-free activity you enjoy!";
-
+                baseAdvice = "Excellent productivity! Just remember to take physical breaks for your eyes and back.";
+                alternateActivity = "Stretching / Hydration break / Quick house chores";
+                break;
             default:
-                return "Monitor your usage patterns over the next few days for tailored advice. "
-                     + "Aim to stay within your " + safeLimit + "-minute daily safe limit.";
+                baseAdvice = "Good job staying within healthy limits. Maintain this consistency!";
+                alternateActivity = "Night walk / Listening to a podcast / Gardening";
         }
+
+        // Emotion-based tailoring
+        String emotionalTailoring = "";
+        if (emotion.contains("stressed") || emotion.contains("anxious")) {
+            emotionalTailoring = "\n\nEmotion focus: Since you're feeling " + emotion + ", avoid doom-scrolling. ";
+            alternateActivity = "Box breathing (4-4-4-4) / Nature walk";
+        } else if (emotion.contains("tired") || emotion.contains("bored")) {
+            emotionalTailoring = "\n\nEmotion focus: Feeling " + emotion + "? Screen time might feel like an easy escape, but a quick walk is better.";
+            alternateActivity = "5-minute cold shower / Organizing your desk";
+        } else if (emotion.contains("happy") || emotion.contains("productive")) {
+            emotionalTailoring = "\n\nEmotion focus: Great to see you're " + emotion + "! Use this energy for off-screen creativity.";
+        }
+
+        record.setAlternateActivity(alternateActivity);
+        return baseAdvice + emotionalTailoring + "\n\n🎯 Recommended Activity: " + alternateActivity;
     }
 
     private int percent(int part, int total) {

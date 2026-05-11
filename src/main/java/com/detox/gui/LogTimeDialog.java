@@ -41,6 +41,9 @@ public class LogTimeDialog extends JDialog {
     // Peak Usage Hour
     private JSpinner peakHourSpinner;
 
+    // Emotion Selection
+    private JComboBox<String> emotionCombo;
+
     private JLabel totalLabel;
     private JLabel statusLabel;
     private boolean submitted = false;
@@ -102,7 +105,8 @@ public class LogTimeDialog extends JDialog {
         gbc.insets = new Insets(0, 0, 4, 0);
 
         // ── Title ──────────────────────────────────────────────────────────
-        JLabel title = new JLabel("📝  Screen Time Entry");
+        JLabel title = new JLabel("  Screen Time Entry");
+        title.setIcon(UIUtils.getIcon("pencil", 20, ACCENT2));
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
         title.setForeground(ACCENT2);
         p.add(title, gbc);
@@ -138,21 +142,21 @@ public class LogTimeDialog extends JDialog {
         studyHrsSpinner = makeHrSpinner(defStudyMin / 60);
         studyMinSpinner = makeMinSpinner(defStudyMin % 60);
         gbc.gridy++; gbc.insets = new Insets(8, 0, 4, 0);
-        p.add(categoryRow("📚  Study / Productive", new Color(0x4CAF50),
+        p.add(categoryRow("Study / Productive", "book", new Color(0x4CAF50),
                 studyHrsSpinner, studyMinSpinner, INFO_STUDY), gbc);
 
         // ── Social row ─────────────────────────────────────────────────────
         socialHrsSpinner = makeHrSpinner(defSocMin / 60);
         socialMinSpinner = makeMinSpinner(defSocMin % 60);
         gbc.gridy++; gbc.insets = new Insets(6, 0, 4, 0);
-        p.add(categoryRow("📱  Social Media", new Color(0xFFB03A),
+        p.add(categoryRow("Social Media", "phone", new Color(0xFFB03A),
                 socialHrsSpinner, socialMinSpinner, INFO_SOCIAL), gbc);
 
         // ── Entertainment row ──────────────────────────────────────────────
         entHrsSpinner = makeHrSpinner(defEntMin / 60);
         entMinSpinner = makeMinSpinner(defEntMin % 60);
         gbc.gridy++;
-        p.add(categoryRow("🎮  Entertainment", new Color(0xFF6B6B),
+        p.add(categoryRow("Entertainment", "game", new Color(0xFF6B6B),
                 entHrsSpinner, entMinSpinner, INFO_ENT), gbc);
 
         // ── Separator ─────────────────────────────────────────────────────
@@ -164,6 +168,10 @@ public class LogTimeDialog extends JDialog {
         ((SpinnerNumberModel) peakHourSpinner.getModel()).setMaximum(23);
         gbc.gridy++; gbc.insets = new Insets(12, 0, 4, 0);
         p.add(peakHourRow(), gbc);
+
+        // ── Emotion row ──
+        gbc.gridy++; gbc.insets = new Insets(6, 0, 4, 0);
+        p.add(emotionRow(), gbc);
 
         // ── Total display ──────────────────────────────────────────────────
         gbc.gridy++; gbc.insets = new Insets(16, 0, 0, 0);
@@ -236,17 +244,15 @@ public class LogTimeDialog extends JDialog {
      * Builds one category row with:
      * [emoji label] [accent dot] [hrs spinner] [mins spinner] [ℹ button]
      */
-    private JPanel categoryRow(String label, Color accent,
+    private JPanel categoryRow(String label, String iconName, Color accent,
                                JSpinner hrsSpinner, JSpinner minSpinner,
                                String infoHtml) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setOpaque(false);
 
         // Label
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lbl.setForeground(TEXT);
-        lbl.setPreferredSize(new Dimension(210, 30));
+        JLabel lbl = new JLabel("  " + label);
+        lbl.setIcon(UIUtils.getIcon(iconName, 16, TEXT));
 
         // Accent dot
         JPanel dot = makeDot(accent);
@@ -280,7 +286,8 @@ public class LogTimeDialog extends JDialog {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setOpaque(false);
 
-        JLabel lbl = new JLabel("🕐  Peak Usage Hour (0 – 23)");
+        JLabel lbl = new JLabel("  Peak Usage Hour (0 – 23)");
+        lbl.setIcon(UIUtils.getIcon("clock", 16, TEXT));
         lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lbl.setForeground(TEXT);
         lbl.setPreferredSize(new Dimension(210, 30));
@@ -312,6 +319,41 @@ public class LogTimeDialog extends JDialog {
         return row;
     }
 
+    private JPanel emotionRow() {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setOpaque(false);
+
+        JLabel lbl = new JLabel("  How do you feel today?");
+        lbl.setIcon(UIUtils.getIcon("leaf", 16, TEXT));
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setForeground(TEXT);
+        lbl.setPreferredSize(new Dimension(210, 30));
+
+        JPanel left = new JPanel(new BorderLayout(6, 0));
+        left.setOpaque(false);
+        left.add(lbl, BorderLayout.WEST);
+        left.add(makeDot(ACCENT2), BorderLayout.CENTER);
+        row.add(left, BorderLayout.WEST);
+
+        String[] emotions = {"Happy / Positive", "Stressed / Anxious", "Tired / Low Energy", "Productive / Focused", "Bored", "Neutral"};
+        emotionCombo = new JComboBox<>(emotions);
+        emotionCombo.setSelectedIndex(5); // Neutral
+        emotionCombo.setBackground(FDBG);
+        emotionCombo.setForeground(TEXT);
+        emotionCombo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        JPanel right = new JPanel(new BorderLayout());
+        right.setOpaque(false);
+        right.add(emotionCombo, BorderLayout.CENTER);
+        // spacer to match width
+        JLabel gap = new JLabel();
+        gap.setPreferredSize(new Dimension(38, 30));
+        right.add(gap, BorderLayout.EAST);
+
+        row.add(right, BorderLayout.CENTER);
+        return row;
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     //  Actions
     // ─────────────────────────────────────────────────────────────────────────
@@ -321,6 +363,7 @@ public class LogTimeDialog extends JDialog {
         int social = toMinutes(socialHrsSpinner, socialMinSpinner);
         int ent    = toMinutes(entHrsSpinner,    entMinSpinner);
         int peak   = (int) peakHourSpinner.getValue();
+        String emotion = (String) emotionCombo.getSelectedItem();
 
         if (study + social + ent == 0) {
             statusLabel.setText("Please enter at least one non-zero value.");
@@ -328,7 +371,7 @@ public class LogTimeDialog extends JDialog {
         }
 
         ScreenTimeRecord record = new ScreenTimeRecord(
-            user.getId(), study, social, ent, peak
+            user.getId(), study, social, ent, peak, emotion, ""
         );
         try {
             db.saveRecord(record);

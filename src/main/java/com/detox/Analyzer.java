@@ -54,4 +54,18 @@ public class Analyzer {
             default:                    return "Unclassified pattern";
         }
     }
+
+    /** Simple predictive model based on last 3 days trend. */
+    public int predictFutureScore(java.util.List<ScreenTimeRecord> history, User user, DetoxScoreCalculator calc) {
+        if (history.size() < 3) return -1;
+        
+        int score1 = calc.calculateScore(history.get(0), user, analyzePattern(history.get(0), user));
+        int score2 = calc.calculateScore(history.get(1), user, analyzePattern(history.get(1), user));
+        int score3 = calc.calculateScore(history.get(2), user, analyzePattern(history.get(2), user));
+        
+        // Simple linear extrapolation
+        double trend = ((score1 - score2) + (score2 - score3)) / 2.0;
+        int prediction = (int) (score1 + trend);
+        return Math.max(0, Math.min(100, prediction));
+    }
 }

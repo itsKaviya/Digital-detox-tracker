@@ -36,6 +36,13 @@
       <artifactId>flatlaf-intellij-themes</artifactId>
       <version>3.4.1</version>
     </dependency>
+    
+    <!-- FlatLaf Extras for SVG Icon support -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf-extras</artifactId>
+      <version>3.4.1</version>
+    </dependency>
 
     <!-- BCrypt for password hashing -->
     <dependency>

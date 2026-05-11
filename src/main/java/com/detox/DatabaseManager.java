@@ -60,9 +60,30 @@ public class DatabaseManager {
                     entertainment_time  INTEGER NOT NULL DEFAULT 0,
                     total_time          INTEGER NOT NULL DEFAULT 0,
                     peak_usage_hour     INTEGER NOT NULL DEFAULT 12,
+                    emotion             TEXT,
+                    alternate_activity  TEXT,
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
                 """);
+                
+            // Migration: Check and Add columns if they don't exist in an old database
+            ensureColumnExists(st, "records", "emotion", "TEXT");
+            ensureColumnExists(st, "records", "alternate_activity", "TEXT");
+        }
+    }
+
+    private void ensureColumnExists(Statement st, String table, String column, String type) throws SQLException {
+        try (ResultSet rs = st.executeQuery("PRAGMA table_info(" + table + ")")) {
+            boolean exists = false;
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                st.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + type);
+            }
         }
     }
 
@@ -131,6 +152,18 @@ public class DatabaseManager {
         }
     }
 
+    public void updateUser(User user) throws SQLException {
+        String sql = "UPDATE users SET name = ?, daily_safe_limit = ?, sleep_start_hour = ?, sleep_end_hour = ? WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, user.getName());
+            ps.setInt(2, user.getDailySafeLimit());
+            ps.setInt(3, user.getSleepStartHour());
+            ps.setInt(4, user.getSleepEndHour());
+            ps.setLong(5, user.getId());
+            ps.executeUpdate();
+        }
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     //  Screen Time Record Operations
     // ──────────────────────────────────────────────────────────────────────────
@@ -149,8 +182,9 @@ public class DatabaseManager {
 
         String sql = """
             INSERT INTO records(user_id, record_date, study_time, social_time,
-                                entertainment_time, total_time, peak_usage_hour)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                                entertainment_time, total_time, peak_usage_hour,
+                                emotion, alternate_activity)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setLong(1, record.getUserId());
@@ -160,6 +194,8 @@ public class DatabaseManager {
             ps.setInt(5, record.getEntertainmentTime());
             ps.setInt(6, record.getTotalTime());
             ps.setInt(7, record.getPeakUsageHour());
+            ps.setString(8, record.getEmotion());
+            ps.setString(9, record.getAlternateActivity());
             ps.executeUpdate();
         }
     }
@@ -215,6 +251,8 @@ public class DatabaseManager {
         r.setEntertainmentTime(rs.getInt("entertainment_time"));
         r.setTotalTime(rs.getInt("total_time"));
         r.setPeakUsageHour(rs.getInt("peak_usage_hour"));
+        r.setEmotion(rs.getString("emotion"));
+        r.setAlternateActivity(rs.getString("alternate_activity"));
         return r;
     }
 

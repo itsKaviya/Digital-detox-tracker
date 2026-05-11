@@ -64,15 +64,15 @@ public class AppTracker {
 
     private Category classify(String title) {
         // Study / Productivity
-        if (containsAny(title, "intellij", "eclipse", "code", "studio", "word", "excel", "powerpoint", "stack overflow", "github", "docs", "zoom", "teams")) {
+        if (containsAny(title, "intellij", "eclipse", "code", "studio", "word", "excel", "powerpoint", "stack overflow", "github", "docs", "zoom", "teams", "pdf", "java", "python", "math", "quiz", "classroom", "notion", "overleaf")) {
             return Category.STUDY;
         }
         // Social Media
-        if (containsAny(title, "facebook", "instagram", "twitter", "reddit", "whatsapp", "telegram", "discord", "linkedin", "tiktok", "messenger")) {
+        if (containsAny(title, "facebook", "instagram", "twitter", "reddit", "whatsapp", "telegram", "discord", "linkedin", "tiktok", "messenger", "snapchat", "pinterest")) {
             return Category.SOCIAL;
         }
         // Entertainment
-        if (containsAny(title, "youtube", "netflix", "prime video", "disney+", "spotify", "steam", "vlc", "twitch", "game", "player")) {
+        if (containsAny(title, "youtube", "netflix", "prime video", "disney+", "spotify", "steam", "vlc", "twitch", "game", "player", "hulu", "hbo", "gaming", "epic games", "valorant", "minecraft", "roblox")) {
             return Category.ENTERTAINMENT;
         }
         return Category.OTHER;

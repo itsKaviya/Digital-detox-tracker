@@ -16,11 +16,14 @@ public class ScreenTimeRecord {
     private int entertainmentTime;  // minutes
     private int totalTime;          // computed
     private int peakUsageHour;      // 0-23
+    private String emotion;         // Happy, Stressed, Tired, etc.
+    private String alternateActivity; // Suggested alternate activity
 
     public ScreenTimeRecord() {}
 
     public ScreenTimeRecord(LocalDate date, long userId, int studyTime, int socialTime,
-                            int entertainmentTime, int totalTime, int peakUsageHour) {
+                            int entertainmentTime, int totalTime, int peakUsageHour,
+                            String emotion, String alternateActivity) {
         this.date = date;
         this.userId = userId;
         this.studyTime = studyTime;
@@ -28,12 +31,16 @@ public class ScreenTimeRecord {
         this.entertainmentTime = entertainmentTime;
         this.totalTime = totalTime;
         this.peakUsageHour = peakUsageHour;
+        this.emotion = emotion;
+        this.alternateActivity = alternateActivity;
     }
 
     public ScreenTimeRecord(long userId, int studyTime, int socialTime,
-                            int entertainmentTime, int peakUsageHour) {
+                            int entertainmentTime, int peakUsageHour,
+                            String emotion, String alternateActivity) {
         this(LocalDate.now(), userId, studyTime, socialTime, entertainmentTime,
-             studyTime + socialTime + entertainmentTime, peakUsageHour);
+             studyTime + socialTime + entertainmentTime, peakUsageHour,
+             emotion, alternateActivity);
     }
 
     // Getters and Setters
@@ -60,6 +67,12 @@ public class ScreenTimeRecord {
 
     public int getPeakUsageHour() { return peakUsageHour; }
     public void setPeakUsageHour(int hour) { this.peakUsageHour = hour; }
+
+    public String getEmotion() { return emotion; }
+    public void setEmotion(String emotion) { this.emotion = emotion; }
+
+    public String getAlternateActivity() { return alternateActivity; }
+    public void setAlternateActivity(String activity) { this.alternateActivity = activity; }
 
     @Override
     public String toString() {
