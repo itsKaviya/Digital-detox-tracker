@@ -15,6 +15,8 @@ public class SettingsDialog extends JDialog {
     private JSpinner limitSpinner;
     private JSpinner sleepStartSpinner;
     private JSpinner sleepEndSpinner;
+    private JSpinner socialLimitSpinner;
+    private JSpinner entertainmentLimitSpinner;
     private boolean saved = false;
 
     private static final Color BG = new Color(0x2B2D3A);
@@ -69,6 +71,24 @@ public class SettingsDialog extends JDialog {
         sleepEndSpinner = new JSpinner(new SpinnerNumberModel(user.getSleepEndHour(), 0, 23, 1));
         content.add(sleepEndSpinner, gbc);
 
+        // Social Limit
+        gbc.gridx = 0; gbc.gridy++;
+        JLabel sol = new JLabel("Social Limit (min):");
+        sol.setForeground(TEXT);
+        content.add(sol, gbc);
+        gbc.gridx = 1;
+        socialLimitSpinner = new JSpinner(new SpinnerNumberModel(user.getSocialLimit(), 0, 300, 10));
+        content.add(socialLimitSpinner, gbc);
+
+        // Entertainment Limit
+        gbc.gridx = 0; gbc.gridy++;
+        JLabel enl = new JLabel("Entertainment Limit (min):");
+        enl.setForeground(TEXT);
+        content.add(enl, gbc);
+        gbc.gridx = 1;
+        entertainmentLimitSpinner = new JSpinner(new SpinnerNumberModel(user.getEntertainmentLimit(), 0, 300, 10));
+        content.add(entertainmentLimitSpinner, gbc);
+
         // Buttons
         gbc.gridx = 0; gbc.gridy++;
         gbc.gridwidth = 2;
@@ -88,6 +108,8 @@ public class SettingsDialog extends JDialog {
             user.setDailySafeLimit((int) limitSpinner.getValue());
             user.setSleepStartHour((int) sleepStartSpinner.getValue());
             user.setSleepEndHour((int) sleepEndSpinner.getValue());
+            user.setSocialLimit((int) socialLimitSpinner.getValue());
+            user.setEntertainmentLimit((int) entertainmentLimitSpinner.getValue());
             try {
                 db.updateUser(user);
                 saved = true;

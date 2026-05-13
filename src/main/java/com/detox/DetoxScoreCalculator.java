@@ -58,10 +58,10 @@ public class DetoxScoreCalculator {
 
     /** Returns a qualitative label for the score. */
     public String scoreLabel(int score) {
-        if (score >= 85) return "Excellent 🌟";
-        if (score >= 70) return "Good ✅";
-        if (score >= 50) return "Fair ⚠️";
-        if (score >= 30) return "Poor 🔴";
-        return "Critical ❌";
+        if (score >= 85) return "Excellent";
+        if (score >= 70) return "Good";
+        if (score >= 50) return "Fair";
+        if (score >= 30) return "Poor";
+        return "Critical";
     }
 }

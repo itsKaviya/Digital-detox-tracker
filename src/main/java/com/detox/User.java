@@ -15,6 +15,9 @@ public class User {
     private int dailySafeLimit;  // in minutes
     private int sleepStartHour;  // 24-hour format
     private int sleepEndHour;    // 24-hour format
+    private int treesGrown;      // Number of trees in the virtual forest
+    private int socialLimit;     // minutes
+    private int entertainmentLimit; // minutes
 
     private List<ScreenTimeRecord> records = new ArrayList<>();
 
@@ -51,6 +54,15 @@ public class User {
 
     public int getSleepEndHour() { return sleepEndHour; }
     public void setSleepEndHour(int hour) { this.sleepEndHour = hour; }
+
+    public int getTreesGrown() { return treesGrown; }
+    public void setTreesGrown(int count) { this.treesGrown = count; }
+
+    public int getSocialLimit() { return socialLimit; }
+    public void setSocialLimit(int limit) { this.socialLimit = limit; }
+
+    public int getEntertainmentLimit() { return entertainmentLimit; }
+    public void setEntertainmentLimit(int limit) { this.entertainmentLimit = limit; }
 
     public List<ScreenTimeRecord> getRecords() { return records; }
     public void setRecords(List<ScreenTimeRecord> records) { this.records = records; }

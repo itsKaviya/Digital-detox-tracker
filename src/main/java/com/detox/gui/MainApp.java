@@ -1,11 +1,8 @@
 package com.detox.gui;
-
-import com.detox.AppTracker;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 import com.detox.DatabaseManager;
-
-import javax.swing.*;
-import java.awt.*;
+import com.detox.gui.NotificationManager;
+import java.awt.Font;
 
 /**
  * Application entry point.
@@ -27,6 +24,8 @@ public class MainApp {
         SwingUtilities.invokeLater(() -> {
             try {
                 DatabaseManager db = DatabaseManager.getInstance();
+                // Initialise system tray for notifications
+                NotificationManager.init();
                 
                 // Start background app tracking
                 AppTracker tracker = AppTracker.getInstance();

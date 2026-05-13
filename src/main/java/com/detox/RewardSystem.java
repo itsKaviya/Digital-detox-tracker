@@ -47,6 +47,22 @@ public class RewardSystem {
         return list;
     }
 
+    /**
+     * Every 60 minutes of deep focus (Study Time) grows a virtual tree.
+     */
+    public int calculateTreesForToday(ScreenTimeRecord today) {
+        if (today == null) return 0;
+        // Basic rule: 1 tree per 60 mins of study
+        int trees = today.getStudyTime() / 60;
+        
+        // Penalty: If social media exceeds 2 hours, no trees for today
+        if (today.getSocialTime() > 120) {
+            return 0;
+        }
+        
+        return trees;
+    }
+
     public int calculateStreak(List<ScreenTimeRecord> history, User user) {
         int streak = 0;
         int limit = user.getDailySafeLimit();

@@ -37,4 +37,12 @@ public class UIUtils {
             return null;
         }
     }
+
+    public static String formatTime(int minutes) {
+        if (minutes <= 0) return "—";
+        int h = minutes / 60;
+        int m = minutes % 60;
+        if (h > 0) return String.format("%dh %02dm", h, m);
+        return String.format("%dm", m);
+    }
 }

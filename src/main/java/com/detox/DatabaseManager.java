@@ -46,7 +46,10 @@ public class DatabaseManager {
                     name            TEXT    NOT NULL,
                     daily_safe_limit  INTEGER NOT NULL DEFAULT 120,
                     sleep_start_hour  INTEGER NOT NULL DEFAULT 22,
-                    sleep_end_hour    INTEGER NOT NULL DEFAULT 6
+                    sleep_end_hour    INTEGER NOT NULL DEFAULT 6,
+                    trees_grown       INTEGER NOT NULL DEFAULT 0,
+                    social_limit      INTEGER NOT NULL DEFAULT 60,
+                    ent_limit         INTEGER NOT NULL DEFAULT 60
                 )
                 """);
 
@@ -62,6 +65,8 @@ public class DatabaseManager {
                     peak_usage_hour     INTEGER NOT NULL DEFAULT 12,
                     emotion             TEXT,
                     alternate_activity  TEXT,
+                    pickups             INTEGER NOT NULL DEFAULT 0,
+                    notifications       INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
                 """);
@@ -69,6 +74,11 @@ public class DatabaseManager {
             // Migration: Check and Add columns if they don't exist in an old database
             ensureColumnExists(st, "records", "emotion", "TEXT");
             ensureColumnExists(st, "records", "alternate_activity", "TEXT");
+            ensureColumnExists(st, "records", "pickups", "INTEGER DEFAULT 0");
+            ensureColumnExists(st, "records", "notifications", "INTEGER DEFAULT 0");
+            ensureColumnExists(st, "users", "trees_grown", "INTEGER DEFAULT 0");
+            ensureColumnExists(st, "users", "social_limit", "INTEGER DEFAULT 60");
+            ensureColumnExists(st, "users", "ent_limit", "INTEGER DEFAULT 60");
         }
     }
 
@@ -106,6 +116,7 @@ public class DatabaseManager {
             ps.setInt(4, safeLimit);
             ps.setInt(5, sleepStart);
             ps.setInt(6, sleepEnd);
+            // Default limits for new users
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
@@ -153,13 +164,16 @@ public class DatabaseManager {
     }
 
     public void updateUser(User user) throws SQLException {
-        String sql = "UPDATE users SET name = ?, daily_safe_limit = ?, sleep_start_hour = ?, sleep_end_hour = ? WHERE id = ?";
+        String sql = "UPDATE users SET name = ?, daily_safe_limit = ?, sleep_start_hour = ?, sleep_end_hour = ?, trees_grown = ?, social_limit = ?, ent_limit = ? WHERE id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, user.getName());
             ps.setInt(2, user.getDailySafeLimit());
             ps.setInt(3, user.getSleepStartHour());
             ps.setInt(4, user.getSleepEndHour());
-            ps.setLong(5, user.getId());
+            ps.setInt(5, user.getTreesGrown());
+            ps.setInt(6, user.getSocialLimit());
+            ps.setInt(7, user.getEntertainmentLimit());
+            ps.setLong(8, user.getId());
             ps.executeUpdate();
         }
     }
@@ -183,8 +197,8 @@ public class DatabaseManager {
         String sql = """
             INSERT INTO records(user_id, record_date, study_time, social_time,
                                 entertainment_time, total_time, peak_usage_hour,
-                                emotion, alternate_activity)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                emotion, alternate_activity, pickups, notifications)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setLong(1, record.getUserId());
@@ -196,6 +210,8 @@ public class DatabaseManager {
             ps.setInt(7, record.getPeakUsageHour());
             ps.setString(8, record.getEmotion());
             ps.setString(9, record.getAlternateActivity());
+            ps.setInt(10, record.getPickups());
+            ps.setInt(11, record.getNotifications());
             ps.executeUpdate();
         }
     }
@@ -238,6 +254,9 @@ public class DatabaseManager {
         u.setDailySafeLimit(rs.getInt("daily_safe_limit"));
         u.setSleepStartHour(rs.getInt("sleep_start_hour"));
         u.setSleepEndHour(rs.getInt("sleep_end_hour"));
+        u.setTreesGrown(rs.getInt("trees_grown"));
+        u.setSocialLimit(rs.getInt("social_limit"));
+        u.setEntertainmentLimit(rs.getInt("ent_limit"));
         return u;
     }
 
@@ -253,6 +272,8 @@ public class DatabaseManager {
         r.setPeakUsageHour(rs.getInt("peak_usage_hour"));
         r.setEmotion(rs.getString("emotion"));
         r.setAlternateActivity(rs.getString("alternate_activity"));
+        r.setPickups(rs.getInt("pickups"));
+        r.setNotifications(rs.getInt("notifications"));
         return r;
     }
 

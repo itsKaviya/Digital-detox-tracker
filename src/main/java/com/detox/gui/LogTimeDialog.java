@@ -371,7 +371,7 @@ public class LogTimeDialog extends JDialog {
         }
 
         ScreenTimeRecord record = new ScreenTimeRecord(
-            user.getId(), study, social, ent, peak, emotion, ""
+            user.getId(), study, social, ent, peak, emotion, "", 0, 0
         );
         try {
             db.saveRecord(record);

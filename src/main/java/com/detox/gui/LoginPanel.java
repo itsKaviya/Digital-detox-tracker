@@ -63,10 +63,15 @@ public class LoginPanel extends JPanel {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, new Color(0x1A0533),
-                        getWidth(), getHeight(), new Color(0x0D2A40));
+                GradientPaint gp = new GradientPaint(0, 0, new Color(0x2E1B5B),
+                        getWidth(), getHeight(), new Color(0x133D50));
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Add some subtle decorative circles
+                g2.setColor(new Color(255, 255, 255, 15));
+                g2.fillOval(-50, -50, 200, 200);
+                g2.fillOval(getWidth()-150, getHeight()-150, 300, 300);
             }
         };
 
@@ -109,10 +114,10 @@ public class LoginPanel extends JPanel {
     }
 
     private JLabel makeGradientLabel(String text, int size) {
-        return new JLabel(text) {
-            @Override
-            public Dimension getPreferredSize() { return new Dimension(size + 20, size + 20); }
-        };
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("Segoe UI", Font.PLAIN, size));
+        l.setForeground(ACCENT2);
+        return l;
     }
 
     private JPanel makeDotsPanel() {
@@ -142,12 +147,18 @@ public class LoginPanel extends JPanel {
         JPanel wrapper = new JPanel(new GridBagLayout());
         wrapper.setBackground(new Color(0x1E2030));
 
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(CARD_BG);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(0x6C63FF, true).darker(), 1, true),
-            new EmptyBorder(30, 40, 30, 40)
-        ));
+        JPanel card = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CARD_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2.dispose();
+            }
+        };
+        card.setOpaque(false);
+        card.setBorder(new EmptyBorder(30, 40, 30, 40));
         card.setPreferredSize(new Dimension(420, 520));
 
         tabs = new JTabbedPane();
@@ -349,6 +360,9 @@ public class LoginPanel extends JPanel {
             }
             User u = db.registerUser(user, pass, name, limit, sStart, sEnd);
             if (u != null) {
+                u.setSocialLimit(60); // Default limits on first register
+                u.setEntertainmentLimit(60);
+                db.updateUser(u);
                 frame.showDashboard(u);
             }
         } catch (SQLException ex) {

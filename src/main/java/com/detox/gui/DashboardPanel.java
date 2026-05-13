@@ -75,11 +75,10 @@ public class DashboardPanel extends JPanel {
 
         refreshData();
         
-        // Auto-refresh for live tracking (every 10 seconds)
+        // Auto-refresh and AUTO-SAVE for live tracking (every 10 seconds)
         Timer t = new Timer(10000, e -> {
-            if (todayRecord == null) {
-                refreshData();
-            }
+            autoSave();
+            refreshData();
         });
         t.start();
     }
@@ -138,10 +137,12 @@ public class DashboardPanel extends JPanel {
         right.add(tracking);
 
         JButton settingsBtn = flatButton("Settings", ACCENT2);
+        settingsBtn.setPreferredSize(new Dimension(100, 32));
         settingsBtn.addActionListener(e -> openSettings());
         right.add(settingsBtn);
 
         JButton logoutBtn = flatButton("Logout", BAD);
+        logoutBtn.setPreferredSize(new Dimension(100, 32));
         logoutBtn.addActionListener(e -> frame.showLogin());
         right.add(logoutBtn);
 
@@ -187,8 +188,11 @@ public class DashboardPanel extends JPanel {
         gbc.gridheight = 1;
         body.add(buildScoreCard(), gbc);
 
-        gbc.gridy = 1; gbc.gridheight = 2;
+        gbc.gridy = 1; gbc.gridheight = 1;
         body.add(buildAchievementsCard(), gbc);
+
+        gbc.gridy = 2; gbc.gridheight = 1;
+        body.add(buildForestCard(), gbc);
 
         JScrollPane scroll = new JScrollPane(body);
         scroll.setBorder(null);
@@ -225,11 +229,14 @@ public class DashboardPanel extends JPanel {
         totalLabel.setForeground(SUBTEXT);
         footer.add(totalLabel, BorderLayout.WEST);
 
-        logBtn = gradientButton("Log Today's Time", "pencil");
+        logBtn = gradientButton("Add Journal/Emotion", "pencil");
         logBtn.addActionListener(e -> openLogDialog());
         footer.add(logBtn, BorderLayout.EAST);
 
         card.add(footer, BorderLayout.SOUTH);
+        
+        // Advanced Stats (Pickups, Notifications)
+        card.add(buildAdvancedStatsPanel(), BorderLayout.EAST);
 
         // Add trend chart at the bottom of stats card
         chartPanel = new WeeklyChartPanel(user);
@@ -238,6 +245,7 @@ public class DashboardPanel extends JPanel {
         // Re-adjusting title to be at the top-top
         JPanel titleBox = new JPanel(new BorderLayout());
         titleBox.setOpaque(false);
+        titleBox.setBorder(new EmptyBorder(0,0,10,0));
         titleBox.add(card.getComponent(0), BorderLayout.NORTH); // Title label
         card.add(titleBox, BorderLayout.NORTH);
         
@@ -292,6 +300,26 @@ public class DashboardPanel extends JPanel {
 
         parent.add(row);
         return valLabel;
+    }
+
+    private JPanel buildAdvancedStatsPanel() {
+        JPanel p = new JPanel(new GridLayout(2, 1, 0, 5));
+        p.setOpaque(false);
+        p.setBorder(new EmptyBorder(10, 20, 10, 0));
+
+        JLabel pickups = new JLabel("Pickups: 0", UIUtils.getIcon("phone", 14, ACCENT2), SwingConstants.LEFT);
+        pickups.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        pickups.setForeground(TEXT);
+        pickups.setName("pickup_label");
+
+        JLabel dists = new JLabel("Notifications: 0", UIUtils.getIcon("bell", 14, WARN), SwingConstants.LEFT);
+        dists.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dists.setForeground(TEXT);
+        dists.setName("dist_label");
+
+        p.add(pickups);
+        p.add(dists);
+        return p;
     }
 
     private JPanel buildScoreCard() {
@@ -408,6 +436,22 @@ public class DashboardPanel extends JPanel {
         return card;
     }
 
+    private JPanel buildForestCard() {
+        JPanel card = card("Your Virtual Forest", "leaf", GOOD);
+        JPanel trees = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        trees.setOpaque(false);
+        trees.setName("forest_panel");
+        
+        JScrollPane sp = new JScrollPane(trees);
+        sp.setBorder(null);
+        sp.setOpaque(false);
+        sp.getViewport().setOpaque(false);
+        
+        card.add(sp, BorderLayout.CENTER);
+        card.setPreferredSize(new Dimension(300, 150));
+        return card;
+    }
+
     private JPanel buildHistoryCard() {
         JPanel card = card("Recent History (Last 7 Days)", "calendar", ACCENT2);
 
@@ -513,6 +557,9 @@ public class DashboardPanel extends JPanel {
                 suggestion = engine.getSuggestion(todayRecord, user, pattern);
                 updateStatsUI();
                 
+                // Sync tracker with the record so it doesn't reset on restart
+                AppTracker.getInstance().initialize(todayRecord);
+                
                 // Show alert if needed
                 alertSystem.checkAndAlert(this, todayRecord, user);
             } else {
@@ -525,7 +572,9 @@ public class DashboardPanel extends JPanel {
                     tracker.getEntertainmentMinutes(),
                     14, // default peak
                     "Neutral",
-                    ""
+                    "",
+                    0, // pickups
+                    0  // notifications
                 );
                 pattern    = analyzer.analyzePattern(liveTemp, user);
                 detoxScore = calculator.calculateScore(liveTemp, user, pattern);
@@ -542,6 +591,11 @@ public class DashboardPanel extends JPanel {
                     "<b>Live Estimate:</b><br>" + suggestion.replace("\n", "<br>") + "</body></html>");
             }
 
+            // Sync User settings with AppTracker
+            AppTracker tracker = AppTracker.getInstance();
+            tracker.setSocialLimit(user.getSocialLimit());
+            tracker.setEntertainmentLimit(user.getEntertainmentLimit());
+            
             // History
             List<ScreenTimeRecord> history = db.getRecentRecords(user.getId(), 7);
             historyModel.setRowCount(0);
@@ -550,15 +604,20 @@ public class DashboardPanel extends JPanel {
                 int    s = calculator.calculateScore(r, user, p);
                 historyModel.addRow(new Object[]{
                     r.getDate().format(DATE_FMT),
-                    r.getStudyTime(),
-                    r.getSocialTime(),
-                    r.getEntertainmentTime(),
-                    r.getTotalTime(),
+                    UIUtils.formatTime(r.getStudyTime()),
+                    UIUtils.formatTime(r.getSocialTime()),
+                    UIUtils.formatTime(r.getEntertainmentTime()),
+                    UIUtils.formatTime(r.getTotalTime()),
                     s + " / 100",
                     r.getEmotion(),
                     r.getAlternateActivity()
                 });
             }
+            
+            // Adjust column widths for History Table
+            historyTable.getColumnModel().getColumn(0).setPreferredWidth(90);  // Date
+            historyTable.getColumnModel().getColumn(4).setPreferredWidth(80);  // Total
+            historyTable.getColumnModel().getColumn(7).setPreferredWidth(180); // Recommendation
 
             // Trend Chart
             chartPanel.setRecords(history);
@@ -576,6 +635,8 @@ public class DashboardPanel extends JPanel {
             }
 
             scoreRingPanel.repaint();
+            updateAdvancedMetricsUI();
+            updateForestUI();
         } catch (SQLException ex) {
             long now = System.currentTimeMillis();
             if (now - lastErrorShown > 600000) { // 10 minutes
@@ -585,6 +646,27 @@ public class DashboardPanel extends JPanel {
                     "\n\nTIP: If you just updated the app, please RESTART it to apply database changes.",
                     "Database Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    private void autoSave() {
+        AppTracker tracker = AppTracker.getInstance();
+        try {
+            ScreenTimeRecord current = new ScreenTimeRecord(
+                user.getId(),
+                tracker.getStudyMinutes(),
+                tracker.getSocialMinutes(),
+                tracker.getEntertainmentMinutes(),
+                14, 
+                todayRecord != null ? todayRecord.getEmotion() : "Neutral",
+                todayRecord != null ? todayRecord.getAlternateActivity() : "",
+                tracker.getPickups(),
+                tracker.getNotifications()
+            );
+            db.saveRecord(current);
+            todayRecord = current; 
+        } catch (SQLException e) {
+            System.err.println("Auto-save failed: " + e.getMessage());
         }
     }
 
@@ -601,12 +683,12 @@ public class DashboardPanel extends JPanel {
         updateBarWidth(socialBar, social, total, maxW, "Social");
         updateBarWidth(entBar,    ent,    total, maxW, "Entertainment");
 
-        studyBar.setText(study  + " min");
-        socialBar.setText(social + " min");
-        entBar.setText(ent    + " min");
+        studyBar.setText(UIUtils.formatTime(study));
+        socialBar.setText(UIUtils.formatTime(social));
+        entBar.setText(UIUtils.formatTime(ent));
 
-        totalLabel.setText(String.format("Total: %d min  |  Limit: %d min  |  %s",
-            total, limit, total > limit ? "⚠ Over limit" : "✅ Within limit"));
+        totalLabel.setText(String.format("Total: %s  |  Limit: %s  |  %s",
+            UIUtils.formatTime(total), UIUtils.formatTime(limit), total > limit ? "⚠ Over limit" : "✅ Within limit"));
         totalLabel.setForeground(total > limit ? WARN : GOOD);
 
         scoreValueLabel.setText(String.valueOf(detoxScore));
@@ -618,8 +700,59 @@ public class DashboardPanel extends JPanel {
         suggestionLabel.setText("<html><body style='width:100%;'>" +
             suggestion.replace("\n", "<br>") + "</body></html>");
 
-        logBtn.setText("Update Today's Log");
+        logBtn.setText("Complete Journal");
+        updateAdvancedMetricsUI();
     }
+
+    private void updateAdvancedMetricsUI() {
+        AppTracker tracker = AppTracker.getInstance();
+        int p = tracker.getPickups();
+        int n = tracker.getNotifications();
+        
+        findLabel(this, "pickup_label").setText("Pickups: " + p);
+        findLabel(this, "dist_label").setText("Distractions: " + n);
+    }
+
+    private void updateForestUI() {
+        int treesCount = user.getTreesGrown();
+        // Add trees based on today's study progress too
+        int todayTrees = rewardSystem.calculateTreesForToday(todayRecord);
+        int total = treesCount + todayTrees;
+
+        JPanel forest = findPanel(this, "forest_panel");
+        if (forest == null) return;
+        forest.removeAll();
+        for (int i = 0; i < total; i++) {
+            JLabel tree = new JLabel(UIUtils.getIcon("leaf", 24, GOOD));
+            tree.setToolTipText("A tree grown through focus!");
+            forest.add(tree);
+        }
+        forest.revalidate();
+        forest.repaint();
+    }
+
+    private JLabel findLabel(Container c, String name) {
+        if (name.equals(c.getName())) return (JLabel) c;
+        for (Component comp : c.getComponents()) {
+            if (comp instanceof Container) {
+                JLabel l = findLabel((Container) comp, name);
+                if (l != null) return l;
+            }
+        }
+        return new JLabel(); // fallback
+    }
+
+    private JPanel findPanel(Container c, String name) {
+        if (name.equals(c.getName())) return (JPanel) c;
+        for (Component comp : c.getComponents()) {
+            if (comp instanceof Container) {
+                JPanel p = findPanel((Container) comp, name);
+                if (p != null) return p;
+            }
+        }
+        return null;
+    }
+
 
     private void updateBarWidth(JLabel label, int value, int total, int maxW, String name) {
         if (total == 0) return;
@@ -652,11 +785,12 @@ public class DashboardPanel extends JPanel {
         updateBarWidth(socialBar, social, total, maxW, "Social");
         updateBarWidth(entBar,    ent,    total, maxW, "Entertainment");
 
-        studyBar.setText(study > 0 ? study + " min" : "— min");
-        socialBar.setText(social > 0 ? social + " min" : "— min");
-        entBar.setText(ent > 0 ? ent + " min" : "— min");
+        studyBar.setText(UIUtils.formatTime(study));
+        socialBar.setText(UIUtils.formatTime(social));
+        entBar.setText(UIUtils.formatTime(ent));
 
-        totalLabel.setText(String.format("Total: %d min  |  Limit: %d min  |  Live Tracking", total, limit));
+        totalLabel.setText(String.format("Total: %s  |  Limit: %s  |  Live Tracking", 
+            UIUtils.formatTime(total), UIUtils.formatTime(limit)));
         totalLabel.setForeground(SUBTEXT);
         
         scoreValueLabel.setText("—");

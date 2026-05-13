@@ -18,12 +18,14 @@ public class ScreenTimeRecord {
     private int peakUsageHour;      // 0-23
     private String emotion;         // Happy, Stressed, Tired, etc.
     private String alternateActivity; // Suggested alternate activity
+    private int pickups;            // Number of screen unlocks/pickups
+    private int notifications;      // Simulated notification count
 
     public ScreenTimeRecord() {}
 
     public ScreenTimeRecord(LocalDate date, long userId, int studyTime, int socialTime,
                             int entertainmentTime, int totalTime, int peakUsageHour,
-                            String emotion, String alternateActivity) {
+                            String emotion, String alternateActivity, int pickups, int notifications) {
         this.date = date;
         this.userId = userId;
         this.studyTime = studyTime;
@@ -33,14 +35,16 @@ public class ScreenTimeRecord {
         this.peakUsageHour = peakUsageHour;
         this.emotion = emotion;
         this.alternateActivity = alternateActivity;
+        this.pickups = pickups;
+        this.notifications = notifications;
     }
 
     public ScreenTimeRecord(long userId, int studyTime, int socialTime,
                             int entertainmentTime, int peakUsageHour,
-                            String emotion, String alternateActivity) {
+                            String emotion, String alternateActivity, int pickups, int notifications) {
         this(LocalDate.now(), userId, studyTime, socialTime, entertainmentTime,
              studyTime + socialTime + entertainmentTime, peakUsageHour,
-             emotion, alternateActivity);
+             emotion, alternateActivity, pickups, notifications);
     }
 
     // Getters and Setters
@@ -73,6 +77,12 @@ public class ScreenTimeRecord {
 
     public String getAlternateActivity() { return alternateActivity; }
     public void setAlternateActivity(String activity) { this.alternateActivity = activity; }
+
+    public int getPickups() { return pickups; }
+    public void setPickups(int pickups) { this.pickups = pickups; }
+
+    public int getNotifications() { return notifications; }
+    public void setNotifications(int notifications) { this.notifications = notifications; }
 
     @Override
     public String toString() {

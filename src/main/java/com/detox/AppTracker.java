@@ -1,5 +1,7 @@
 package com.detox;
 
+import com.detox.gui.NotificationManager;
+import java.awt.TrayIcon;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
@@ -23,15 +25,34 @@ public class AppTracker {
     private int studySeconds = 0;
     private int socialSeconds = 0;
     private int entSeconds = 0;
+    private int pickups = 0;
+    private int notifications = 0;
+
+    // Limits (in minutes) - defaults
+    private int socialLimit = 60;
+    private int entertainmentLimit = 60;
+    private boolean focusMode = false;
 
     private String lastTitle = "";
     private long lastCheckTime = System.currentTimeMillis();
+    private boolean isLocked = false;
 
     private AppTracker() {}
 
     public static AppTracker getInstance() {
         if (instance == null) instance = new AppTracker();
         return instance;
+    }
+
+    /** Initialises the tracker with today's existing record to prevent reset on restart. */
+    public void initialize(ScreenTimeRecord record) {
+        if (record != null) {
+            this.studySeconds = record.getStudyTime() * 60;
+            this.socialSeconds = record.getSocialTime() * 60;
+            this.entSeconds = record.getEntertainmentTime() * 60;
+            this.pickups = record.getPickups();
+            this.notifications = record.getNotifications();
+        }
     }
 
     /** Starts the tracking loop (checks every 5 seconds). */
@@ -54,10 +75,28 @@ public class AppTracker {
         Category cat = classify(title);
         switch (cat) {
             case STUDY -> studySeconds += elapsedSeconds;
-            case SOCIAL -> socialSeconds += elapsedSeconds;
-            case ENTERTAINMENT -> entSeconds += elapsedSeconds;
-            case OTHER -> {} // Track total screen time if needed
+            case SOCIAL -> {
+                socialSeconds += elapsedSeconds;
+                checkLimit("Social Media", socialSeconds, socialLimit);
+            }
+            case ENTERTAINMENT -> {
+                entSeconds += elapsedSeconds;
+                checkLimit("Entertainment", entSeconds, entertainmentLimit);
+            }
+            case OTHER -> {} 
         }
+
+        // Simulate notification count based on window switches
+        if (!title.equals(lastTitle) && !lastTitle.isEmpty()) {
+            notifications++;
+        }
+
+        // Simple Pickup/Wake detection
+        boolean currentlyLocked = isSystemLocked();
+        if (isLocked && !currentlyLocked) {
+            pickups++;
+        }
+        isLocked = currentlyLocked;
 
         lastTitle = title;
     }
@@ -85,10 +124,34 @@ public class AppTracker {
         return false;
     }
 
+    private boolean isSystemLocked() {
+        // Very basic heuristic for a desktop app: if HWND is null or title is empty/Login, it might be locked.
+        // For real production, we'd use WTSRegisterSessionNotification, but this works for demo.
+        HWND hwnd = User32.INSTANCE.GetForegroundWindow();
+        return hwnd == null;
+    }
+
+    private void checkLimit(String category, int currentSeconds, int limitMinutes) {
+        if (currentSeconds > limitMinutes * 60) {
+            // Trigger alert via system tray notification
+            NotificationManager.showNotification("Limit Exceeded", "You have exceeded the " + category + " limit.", TrayIcon.MessageType.WARNING);
+        }
+        if (focusMode && (category.equals("Social Media") || category.equals("Entertainment"))) {
+             // In strict focus mode, we could minimize the window
+             // User32.INSTANCE.ShowWindow(User32.INSTANCE.GetForegroundWindow(), User32.SW_MINIMIZE);
+        }
+    }
+
     // Getters for minutes (rounded)
     public int getStudyMinutes() { return studySeconds / 60; }
     public int getSocialMinutes() { return socialSeconds / 60; }
     public int getEntertainmentMinutes() { return entSeconds / 60; }
+    public int getPickups() { return pickups; }
+    public int getNotifications() { return notifications; }
+
+    public void setSocialLimit(int mins) { this.socialLimit = mins; }
+    public void setEntertainmentLimit(int mins) { this.entertainmentLimit = mins; }
+    public void setFocusMode(boolean enabled) { this.focusMode = enabled; }
 
     public void stop() {
         scheduler.shutdown();
